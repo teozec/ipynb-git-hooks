@@ -1,0 +1,29 @@
+#!/bin/sh
+
+. .git/hooks/environment
+
+# Get the commit message
+msg=$(git log -n1 --pretty=format:'%B')
+
+# Move to the other repository
+cd $other_dir
+
+# Delete all files that were deleted in the commit
+for file in $(cat ${d_file}); do
+	rm -rf "$file"
+done
+# Add the deletions to the staged area
+git add --update
+
+# Copy added and modified files from the temporary directory to the repository,
+# then delete them from the temp directory and add them to the staged area
+for file in $(cat ${am_file}); do
+	mkdir -p "${other_dir}${file%/*}"
+	cp "${tmp_dir}${file}" ".${file%/*}"
+	rm "${tmp_dir}${file}"
+	file=$(echo "$file" | sed 's?^/??')
+	git add $file
+done
+
+# Commit (ignoring hooks and allowing empty commits, needed if only the output of the notebooks changed)
+git -c core.hooksPath=/dev/null commit --allow-empty -m "$msg"

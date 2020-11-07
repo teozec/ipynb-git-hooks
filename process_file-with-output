@@ -1,0 +1,13 @@
+process_file() {
+	# Create subdirectory inside the temp directory, if needed
+	mkdir -p "${tmp_dir}/${1%/*}"
+
+	# If the file is a notebook, strip it and save the stripped version in the temp directory
+	if echo "$1" | grep -q '.ipynb'; then
+		echo "Stripping file $1"
+		nbstripout -t "${project_dir}$1" > "${tmp_dir}${1}"
+	# Otherwise, just copy it to the temp directory
+	else
+		cp "${project_dir}$1" "${tmp_dir}${1}"
+	fi
+}

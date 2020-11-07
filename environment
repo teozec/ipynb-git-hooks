@@ -1,0 +1,10 @@
+# The current repository
+project_dir="$(pwd)"
+
+# Edit the following two lines
+other_dir=''
+tmp_dir=''
+
+# Temporary files used to share information between the pre-commit and post-commit hook
+am_file="$(pwd)/.git/hooks/am"
+d_file="$(pwd)/.git/hooks/d"

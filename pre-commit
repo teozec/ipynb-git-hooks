@@ -1,0 +1,43 @@
+#!/bin/sh
+
+. .git/hooks/environment
+. .git/hooks/process_file
+
+# Check if nbstripout is installed
+if ! type nbstripout > /dev/null; then
+	echo "nbstripout is not installed!" >&2
+	exit 1
+fi
+
+# Check if this repository is synced with the other one
+last_msg=$(git log -n1 --pretty=format:'%s' 2>/dev/null)
+cd $other_dir
+other_last_msg=$(git log -n1 --pretty=format:'%s' 2>/dev/null)
+cd $project_dir
+if [ "$previous_msg" != "$other_previous_msg" ]; then
+	echo "Last commit message is different in the two repositories!" >&2
+	exit 1
+fi
+
+# Stash changes so that we work on the staged version of the files
+git stash -q --keep-index
+
+# Save the names of added and modified files
+git diff-index --cached --name-only --diff-filter=AM HEAD | sed 's?^?/?' > $am_file
+# Save the names of deleted files
+git diff-index --cached --name-only --diff-filter=D HEAD > $d_file
+
+# Restore the working directory.
+git stash pop -q
+# Since stash pop also restores removed files, get rid of them.
+for file in $(cat $d_file); do
+	rm -f $file
+done
+
+# Process the files
+for file in $(cat $am_file | grep -v '^local/' ); do
+	process_file $file
+done
+
+# Success
+exit 0

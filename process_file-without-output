@@ -1,0 +1,14 @@
+process_file() {
+	# Create subdirectory inside the temp directory, if needed
+	mkdir -p "${tmp_dir}/${1%/*}"
+	# Copy each file (including non-stripped notebooks) to the temp directory
+	cp "${project_dir}$1" "${tmp_dir}${1}"
+
+	# If the file is a notebook, strip it in place, and add the stripped version to the staged area
+	if echo "$1" | grep -q '.ipynb'; then
+		echo "Stripping file $1"
+		nbstripout "${project_dir}$1"
+		file=$(echo $1 | sed 's?^/??')
+		git add $file
+	fi
+}
